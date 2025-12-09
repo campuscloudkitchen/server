@@ -10,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -26,6 +26,9 @@ model User {
   isVerified    Boolean    @default(false)
   refreshToken  String?
   cart          Cart[]
+  order         Order[]
+  notifications  Notification[]
+  dispatchedOrders Order[] @relation("DispatchRelation")
 }
 
 model Food {
@@ -37,20 +40,80 @@ model Food {
   photoId     String?
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt()
-  cart        Cart[]
+  cartItem    CartItem[]
+  orderItem   OrderItem[]
 }
 
 model Cart {
-  id          String       @id @default(uuid())
+  id          String       @id()  @default(uuid())
   user        User         @relation(fields: [userId], references: [id])
+  userId      String       @unique
+  items       CartItem[]
+}
+
+model CartItem {
+  id          String       @id() @default(uuid())
+  cart        Cart   @relation(fields: [cartId], references: [id])
+  cartId      String
   food        Food         @relation(fields: [foodId], references: [id])
   foodId      String
-  userId      String
   quantity    Int          @default(1)
+  @@unique([cartId, foodId], name: "cartId_foodId")
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  user        User        @relation(fields: [userId], references: [id])
+  userId      String
+
+  totalAmount Float
+  status      OrderStatus @default(PENDING)
+
+  items       OrderItem[]
+
+  deliveryAddress String
+  phoneNumber     String
+
+  dispatchRider   User?      @relation("DispatchRelation", fields: [dispatchRiderId], references: [id])
+  dispatchRiderId String?
+  dispatchedAt    DateTime?
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  order     Order    @relation(fields: [orderId], references: [id])
+  orderId   String
+
+  food      Food     @relation(fields: [foodId], references: [id])
+  foodId    String
+
+  quantity  Int      @default(1)
+  price     Float
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  DELIVERED
+  CANCELLED
 }
 
 enum Role {
   USER
   ADMIN
   DISPATCH
+}
+
+model Notification {
+  id        String  @id @default(uuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  title     String
+  reason    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

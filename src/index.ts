@@ -5,6 +5,7 @@ import { configDotenv } from "dotenv";
 import connectDB from "./config/connectDB.js";
 import version1 from "./routers/apiV1.js";
 import corsOptions from "./config/corsOptions.js";
+import morgan from "morgan";
 
 configDotenv();
 const app = express();
@@ -15,6 +16,7 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(morgan("dev"));
 
 app.use("/api/v1", version1 );
 

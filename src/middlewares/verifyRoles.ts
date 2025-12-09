@@ -3,9 +3,14 @@ import { ReqWithUser } from "./verifyJWT.js";
 
 const verifyRoles = (...allowedRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!(req as ReqWithUser)?.user?.role) return res.status(403).json({ message: "Access denied: no roles found." });
+    if (!(req as ReqWithUser)?.user?.role) {
+      return res.status(403).json({ message: "Access denied: no roles found." })
+    };
     const hasRole = allowedRoles.includes((req as ReqWithUser)?.user?.role);
-    if (!hasRole) return res.status(403).json({ message: "Access denied: insufficient role." });
+    if (!hasRole) {
+      console.log("Access denied: no roles found.")
+      return res.status(403).json({ message: "Access denied: insufficient role." });
+    }
     next();
   };
 };
